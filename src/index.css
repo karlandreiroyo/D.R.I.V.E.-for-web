@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@layer base {
+  body {
+    @apply m-0 min-h-screen min-w-[320px] bg-[#080b14] font-sans text-slate-100 antialiased;
+  }
+
+  ::selection {
+    @apply bg-indigo-600 text-white;
+  }
+}

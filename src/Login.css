@@ -1,0 +1,176 @@
+@reference "tailwindcss";
+
+@layer components {
+  .login-page {
+    @apply min-h-screen bg-[#101012] p-0;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .login-shell {
+    @apply grid min-h-screen w-full overflow-hidden bg-black;
+  }
+
+  .story-panel {
+    @apply relative isolate min-h-[470px] overflow-hidden bg-[#29282c] bg-cover bg-center text-white;
+    background-image: url('/driver-background.jpg');
+  }
+
+  .story-overlay {
+    @apply pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgba(8,10,15,0.12)_0%,rgba(4,6,11,0.24)_48%,rgba(4,6,11,0.5)_100%)];
+  }
+
+  .brand {
+    @apply absolute left-7 top-[53px] z-10 flex items-center gap-2;
+  }
+
+  .brand-icon-shell {
+    @apply grid size-[72px] place-items-center overflow-hidden rounded-full border border-[#d8e7f3] bg-white shadow-md;
+  }
+
+  .brand-icon {
+    @apply size-[64px] object-contain;
+  }
+
+  .brand-name {
+    @apply text-[30px] font-bold tracking-wide text-white;
+  }
+
+  .story-copy {
+    @apply absolute left-7 top-[35%] z-10 w-[88%] max-w-[540px];
+  }
+
+  .story-title {
+    @apply text-[clamp(1.8rem,4.55vw,3.25rem)] font-bold leading-[1.13] tracking-[-0.025em] text-white;
+  }
+
+  .story-description {
+    @apply mt-3 max-w-[500px] text-[17px] leading-snug text-white/90;
+  }
+
+  .story-features {
+    @apply mt-4 list-disc pl-5 text-[17px] leading-snug text-white/90;
+  }
+
+  .login-panel {
+    @apply relative flex min-h-[380px] items-center justify-center bg-black px-5 py-10 text-white;
+  }
+
+  .login-content {
+    @apply w-full max-w-[400px];
+  }
+
+  .login-heading {
+    @apply mb-8 text-center;
+  }
+
+  .login-title {
+    @apply text-[clamp(2rem,3.2vw,3rem)] font-bold leading-tight text-white;
+  }
+
+  .login-subtitle {
+    @apply mt-2 text-sm leading-snug text-white/80;
+  }
+
+  .login-form {
+    @apply flex flex-col gap-2;
+  }
+
+  .text-input {
+    @apply h-12 w-full rounded-md border border-[#38393e] bg-[#2d2e33] px-3 text-[15px] text-white outline-none transition placeholder:text-[#a2a2a7] focus:border-[#5556c9] focus:ring-2 focus:ring-[#3636a8];
+  }
+
+  .password-control {
+    @apply relative;
+  }
+
+  .password-input {
+    @apply pr-10;
+  }
+
+  .password-toggle {
+    @apply absolute inset-y-0 right-0 grid w-10 place-items-center text-slate-400 hover:text-white focus-visible:outline-1 focus-visible:outline-white;
+  }
+
+  .eye-icon {
+    @apply size-[18px];
+  }
+
+  .forgot-link {
+    @apply -mt-1 self-end text-[13px] leading-tight text-white/80 hover:text-white hover:underline focus-visible:outline-1 focus-visible:outline-white;
+  }
+
+  .submit-button {
+    @apply mt-1 h-11 w-full rounded-md bg-[#1717a7] text-[15px] font-semibold text-white transition hover:bg-[#2525c2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-px;
+  }
+
+  .form-notice {
+    @apply rounded border border-amber-200/20 bg-amber-200/10 px-3 py-2 text-xs leading-snug text-amber-100;
+  }
+
+  .form-error {
+    @apply rounded border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs leading-snug text-red-300;
+  }
+
+  .signup-divider {
+    @apply my-4 flex items-center gap-3;
+  }
+
+  .divider-rule {
+    @apply h-px flex-1 bg-white/25;
+  }
+
+  .divider-label {
+    @apply whitespace-nowrap text-[13px] text-white/70;
+  }
+
+  .google-button {
+    @apply mx-auto grid size-8 place-items-center rounded-full focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white;
+  }
+
+  .google-mark {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    background: conic-gradient(from -45deg, #4285f4 0 25%, #34a853 25% 48%, #fbbc05 48% 72%, #ea4335 72% 88%, #4285f4 88%);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .signup-prompt {
+    @apply mt-3 text-center text-[13px] text-white/90;
+  }
+
+  .signup-prompt button {
+    @apply text-[#596cff] underline underline-offset-2 hover:text-[#8791ff] focus-visible:outline-1 focus-visible:outline-white;
+  }
+}
+
+@media (min-width: 40rem) {
+  .login-shell {
+    @apply min-h-0 h-screen grid-cols-2;
+    height: 100dvh;
+  }
+
+  .story-panel {
+    @apply min-h-0;
+  }
+
+  .login-panel {
+    @apply min-h-0;
+  }
+}
+
+@media (min-width: 64rem) {
+  .brand {
+    @apply left-10 top-[53px];
+  }
+
+  .story-copy {
+    @apply left-10;
+  }
+
+  .login-content {
+    @apply w-[72%];
+  }
+}

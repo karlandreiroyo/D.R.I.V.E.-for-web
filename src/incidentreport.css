@@ -1,0 +1,267 @@
+/*
+  Incident Reports page.
+  Uses the same --u size unit as Dashboard.css and reuses
+  .dash-card, .dash-pill and .dash-pill.is-done from there.
+*/
+
+/* ---------- Filters ---------- */
+.ir-filters {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: calc(var(--u) * 1.2);
+  margin-bottom: calc(var(--u) * 2.4);
+}
+
+.ir-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 1);
+}
+
+.ir-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.8);
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 1.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  background: transparent;
+  font-size: calc(var(--u) * 1.6);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+
+.ir-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ir-chip:focus-visible,
+.ir-item:focus-visible,
+.ir-send:focus-visible,
+.ir-textarea:focus-visible {
+  outline: 2px solid #fff;
+}
+
+.ir-chip.is-active,
+.ir-chip.is-active:hover {
+  border-color: #1717a7;
+  background: #1717a7;
+  color: #fff;
+}
+
+.ir-chip-count {
+  font-size: calc(var(--u) * 1.4);
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+/* ---------- Layout ---------- */
+.ir-layout {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 2.4);
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .ir-layout {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  }
+
+  .ir-list,
+  .ir-detail-card {
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+.ir-empty {
+  padding: calc(var(--u) * 3);
+  font-size: calc(var(--u) * 1.7);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Report list ---------- */
+.ir-list {
+  padding: calc(var(--u) * 1.2);
+}
+
+.ir-items {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 0.4);
+}
+
+.ir-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--u) * 1.6);
+  width: 100%;
+  padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6);
+  border-radius: calc(var(--u) * 1.2);
+  text-align: left;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ir-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ir-item.is-selected,
+.ir-item.is-selected:hover {
+  background: rgba(23, 23, 167, 0.35);
+}
+
+.ir-item-text {
+  display: block;
+  min-width: 0;
+}
+
+.ir-item-title {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: calc(var(--u) * 1.8);
+  font-weight: 700;
+}
+
+.ir-item-meta {
+  display: block;
+  margin-top: calc(var(--u) * 0.4);
+  font-size: calc(var(--u) * 1.4);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Report detail ---------- */
+.ir-detail {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 2);
+  padding: calc(var(--u) * 2.8) calc(var(--u) * 3.2);
+}
+
+.ir-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--u) * 1.6);
+}
+
+.ir-detail-title {
+  font-size: calc(var(--u) * 2.6);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+}
+
+.ir-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--u) * 0.8) calc(var(--u) * 1.6);
+  font-size: calc(var(--u) * 1.5);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ir-tag {
+  padding: calc(var(--u) * 0.4) calc(var(--u) * 1.4);
+  border-radius: 9999px;
+  background: rgba(23, 23, 167, 0.45);
+  font-size: calc(var(--u) * 1.4);
+  font-weight: 600;
+  color: #c7c7ff;
+}
+
+.ir-message {
+  padding: calc(var(--u) * 1.8) calc(var(--u) * 2);
+  border-radius: calc(var(--u) * 1.2);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: calc(var(--u) * 1.8);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: pre-wrap;
+}
+
+.ir-section-label {
+  margin-bottom: calc(var(--u) * 1);
+  font-size: calc(var(--u) * 1.5);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ir-replies {
+  display: flex;
+  flex-direction: column;
+}
+
+.ir-reply {
+  margin-bottom: calc(var(--u) * 1);
+  padding: calc(var(--u) * 1.4) calc(var(--u) * 1.8);
+  border-left: calc(var(--u) * 0.3) solid #22c55e;
+  border-radius: calc(var(--u) * 0.8);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.ir-reply-meta {
+  font-size: calc(var(--u) * 1.4);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ir-reply-text {
+  margin-top: calc(var(--u) * 0.6);
+  font-size: calc(var(--u) * 1.7);
+  line-height: 1.5;
+  color: #fff;
+}
+
+/* ---------- Reply box ---------- */
+.ir-compose {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ir-textarea {
+  width: 100%;
+  padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: calc(var(--u) * 1.2);
+  background: #000;
+  font-family: inherit;
+  font-size: calc(var(--u) * 1.7);
+  line-height: 1.5;
+  color: #fff;
+  resize: vertical;
+}
+
+.ir-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ir-send {
+  margin-top: calc(var(--u) * 1.4);
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 2.8);
+  border-radius: calc(var(--u) * 1);
+  background: #1717a7;
+  font-size: calc(var(--u) * 1.7);
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+.ir-send:hover:not(:disabled) {
+  background: #2323c9;
+}
+
+.ir-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
