@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import './ContactSupport.css'
+import './contactsupport.css'
 
 const FILTERS = [
   { id: 'all', label: 'All' },

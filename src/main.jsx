@@ -14,7 +14,7 @@ function readSession() {
   }
 }
 
-function Root() {
+export function Root() {
   const [user, setUser] = useState(readSession)
 
   function handleLogin(username) {

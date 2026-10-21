@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import ContactSupport from './contactsupport.jsx'
 import IncidentReports from './incidentreports.jsx'
 import FeatureSuggestions from './featuresuggestions.jsx'
+import UsersDevices from './usersdevices.jsx'
 import './dashboard.css'
 
 const NAV = [
@@ -218,6 +219,186 @@ const INITIAL_SUBMISSIONS = [
 const INCIDENT_TYPES = ['Missed Detection', 'False Alarm', 'Hardware Fault', 'App Bug', 'Calibration / Lighting']
 const FEATURE_STAGES = ['Under review', 'Planned', 'In progress', 'Done', 'Declined']
 
+// Sample users and their devices. Replace with real data from your backend later.
+// account: 'Active' or 'Suspended'
+// device: null (no device linked) or an object. connection: 'Online' or 'Offline'.
+// calibration: 'Calibrated' or 'Needs calibration'
+const INITIAL_USERS = [
+  {
+    id: 1,
+    name: 'Ana Dizon',
+    email: 'ana.dizon@email.com',
+    phone: '+63 917 123 4501',
+    role: 'Delivery driver',
+    vehicle: 'Motorcycle · ABC 1234',
+    joined: 'Aug 3, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0001',
+      firmware: 'v1.2.0',
+      connection: 'Offline',
+      lastSeen: 'Oct 18, 2026 · 9:10 AM',
+      calibration: 'Calibrated',
+      alerts30d: 12,
+    },
+  },
+  {
+    id: 2,
+    name: 'Grace Tan',
+    email: 'grace.tan@email.com',
+    phone: '+63 917 123 4502',
+    role: 'Delivery driver',
+    vehicle: 'Van · XYZ 5521',
+    joined: 'Aug 9, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0002',
+      firmware: 'v1.2.1',
+      connection: 'Online',
+      lastSeen: 'Oct 19, 2026 · 1:40 PM',
+      calibration: 'Calibrated',
+      alerts30d: 4,
+    },
+  },
+  {
+    id: 3,
+    name: 'Maria Santos',
+    email: 'maria.santos@email.com',
+    phone: '+63 917 123 4503',
+    role: 'Bus driver',
+    vehicle: 'Bus · NBC 8890',
+    joined: 'Aug 14, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0003',
+      firmware: 'v1.2.1',
+      connection: 'Online',
+      lastSeen: 'Oct 19, 2026 · 1:35 PM',
+      calibration: 'Calibrated',
+      alerts30d: 9,
+    },
+  },
+  {
+    id: 4,
+    name: 'Paolo Cruz',
+    email: 'paolo.cruz@email.com',
+    phone: '+63 917 123 4504',
+    role: 'Truck driver',
+    vehicle: 'Truck · TRK 3307',
+    joined: 'Aug 21, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0004',
+      firmware: 'v1.1.8',
+      connection: 'Online',
+      lastSeen: 'Oct 19, 2026 · 12:58 PM',
+      calibration: 'Calibrated',
+      alerts30d: 7,
+    },
+  },
+  {
+    id: 5,
+    name: 'Ken Villar',
+    email: 'ken.villar@email.com',
+    phone: '+63 917 123 4505',
+    role: 'Taxi driver',
+    vehicle: 'Sedan · TAX 4410',
+    joined: 'Sep 2, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0005',
+      firmware: 'v1.2.0',
+      connection: 'Online',
+      lastSeen: 'Oct 19, 2026 · 11:20 AM',
+      calibration: 'Needs calibration',
+      alerts30d: 2,
+    },
+  },
+  {
+    id: 6,
+    name: 'Jun Reyes',
+    email: 'jun.reyes@email.com',
+    phone: '+63 917 123 4506',
+    role: 'Delivery driver',
+    vehicle: 'Motorcycle · MTR 7712',
+    joined: 'Sep 5, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0006',
+      firmware: 'v1.2.1',
+      connection: 'Online',
+      lastSeen: 'Oct 19, 2026 · 1:12 PM',
+      calibration: 'Calibrated',
+      alerts30d: 5,
+    },
+  },
+  {
+    id: 7,
+    name: 'Carlo Mendoza',
+    email: 'carlo.mendoza@email.com',
+    phone: '+63 917 123 4507',
+    role: 'Jeepney driver',
+    vehicle: 'Jeepney · JPN 2203',
+    joined: 'Sep 11, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0007',
+      firmware: 'v1.1.8',
+      connection: 'Offline',
+      lastSeen: 'Oct 14, 2026 · 4:45 PM',
+      calibration: 'Calibrated',
+      alerts30d: 0,
+    },
+  },
+  {
+    id: 8,
+    name: 'Sofia Lim',
+    email: 'sofia.lim@email.com',
+    phone: '+63 917 123 4508',
+    role: 'Delivery driver',
+    vehicle: 'Van · SLM 6045',
+    joined: 'Sep 18, 2026',
+    account: 'Active',
+    device: {
+      serial: 'DRV-0008',
+      firmware: 'v1.2.1',
+      connection: 'Online',
+      lastSeen: 'Oct 19, 2026 · 1:30 PM',
+      calibration: 'Calibrated',
+      alerts30d: 3,
+    },
+  },
+  {
+    id: 9,
+    name: 'Rico Bautista',
+    email: 'rico.bautista@email.com',
+    phone: '+63 917 123 4509',
+    role: 'Truck driver',
+    vehicle: 'Truck · RBT 9981',
+    joined: 'Oct 1, 2026',
+    account: 'Active',
+    device: null,
+  },
+  {
+    id: 10,
+    name: 'Diane Flores',
+    email: 'diane.flores@email.com',
+    phone: '+63 917 123 4510',
+    role: 'Taxi driver',
+    vehicle: 'Sedan · DNF 1188',
+    joined: 'Oct 3, 2026',
+    account: 'Suspended',
+    device: {
+      serial: 'DRV-0010',
+      firmware: 'v1.2.0',
+      connection: 'Offline',
+      lastSeen: 'Oct 10, 2026 · 8:05 PM',
+      calibration: 'Calibrated',
+      alerts30d: 1,
+    },
+  },
+]
+
 function countNew(list, category) {
   return list.filter((s) => s.category === category && s.status === 'New').length
 }
@@ -400,6 +581,7 @@ function Placeholder({ title }) {
 export default function Dashboard({ onLogout }) {
   const [page, setPage] = useState('dashboard')
   const [submissions, setSubmissions] = useState(INITIAL_SUBMISSIONS)
+  const [users, setUsers] = useState(INITIAL_USERS)
 
   function handleReply(id, text) {
     const date = new Date().toLocaleString('en-US', {
@@ -420,6 +602,18 @@ export default function Dashboard({ onLogout }) {
 
   function handleStageChange(id, stage) {
     setSubmissions((list) => list.map((item) => (item.id === id ? { ...item, stage } : item)))
+  }
+
+  function handleToggleSuspend(id) {
+    setUsers((list) =>
+      list.map((user) =>
+        user.id === id ? { ...user, account: user.account === 'Suspended' ? 'Active' : 'Suspended' } : user,
+      ),
+    )
+  }
+
+  function handleUnlinkDevice(id) {
+    setUsers((list) => list.map((user) => (user.id === id ? { ...user, device: null } : user)))
   }
 
   const badges = {
@@ -457,6 +651,8 @@ export default function Dashboard({ onLogout }) {
         onStageChange={handleStageChange}
       />
     )
+  } else if (page === 'users-devices') {
+    content = <UsersDevices users={users} onToggleSuspend={handleToggleSuspend} onUnlinkDevice={handleUnlinkDevice} />
   } else {
     content = <Placeholder title={pageTitle} />
   }

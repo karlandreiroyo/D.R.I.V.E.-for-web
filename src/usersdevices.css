@@ -1,0 +1,151 @@
+/*
+  Users & Devices page: extras only.
+  The list/detail layout and filter chips come from incidentreport.css (.ir-* classes).
+*/
+
+/* Stat cards here are not clickable */
+.dash-stat.ud-stat {
+  cursor: default;
+}
+
+.dash-stat.ud-stat:hover {
+  background: #1b1b1e;
+}
+
+@media (min-width: 1024px) {
+  .ud-layout {
+    min-height: calc(var(--u) * 40);
+  }
+}
+
+/* ---------- Search ---------- */
+.ud-search {
+  width: 100%;
+  max-width: calc(var(--u) * 48);
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 1.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  background: #1b1b1e;
+  font-family: inherit;
+  font-size: calc(var(--u) * 1.6);
+  color: #fff;
+}
+
+.ud-search::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ud-search:focus-visible {
+  outline: 2px solid #fff;
+}
+
+/* ---------- Status pills ---------- */
+.ud-pill {
+  flex-shrink: 0;
+  padding: calc(var(--u) * 0.5) calc(var(--u) * 2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: calc(var(--u) * 1.5);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+.ud-pill--online {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+}
+
+.ud-pill--offline {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.ud-pill--suspended {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+/* ---------- Detail fields ---------- */
+.ud-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--u) * 1.4) calc(var(--u) * 2);
+}
+
+.ud-device {
+  padding: calc(var(--u) * 1.8) calc(var(--u) * 2);
+  border-radius: calc(var(--u) * 1.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ud-field-label {
+  font-size: calc(var(--u) * 1.4);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ud-field-value {
+  margin-top: calc(var(--u) * 0.4);
+  font-size: calc(var(--u) * 1.8);
+  font-weight: 600;
+  color: #fff;
+}
+
+.ud-field-value--good {
+  color: #4ade80;
+}
+
+.ud-field-value--warn {
+  color: #fbbf24;
+}
+
+.ud-field-value--bad {
+  color: #f87171;
+}
+
+.ud-empty-device {
+  padding: calc(var(--u) * 1.8) calc(var(--u) * 2);
+  border-radius: calc(var(--u) * 1.2);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: calc(var(--u) * 1.7);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Actions ---------- */
+.ud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 1.2);
+}
+
+.ud-btn {
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 2.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: calc(var(--u) * 1);
+  background: transparent;
+  font-size: calc(var(--u) * 1.6);
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+.ud-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ud-btn:focus-visible {
+  outline: 2px solid #fff;
+}
+
+.ud-btn--danger {
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #f87171;
+}
+
+.ud-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
