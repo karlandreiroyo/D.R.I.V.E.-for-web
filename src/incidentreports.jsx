@@ -1,158 +1,133 @@
 import { useState } from 'react'
-import './incidentreport.css'
+import { Badge, Drawer, ConfirmModal } from './dashboard.jsx'
 
-const STATUS_FILTERS = ['All', 'New', 'Answered']
+const STATUS_OPTS = ["New", "In review", "Resolved"];
 
-function ReportDetail({ report, onReply }) {
-  const [draft, setDraft] = useState('')
-
-  function handleSend() {
-    const text = draft.trim()
-    if (!text) return
-    onReply(report.id, text)
-    setDraft('')
-  }
-
-  return (
-    <div className="ir-detail">
-      <div className="ir-detail-head">
-        <h2 className="ir-detail-title">{report.subject}</h2>
-        <span className={`dash-pill ${report.status === 'Answered' ? 'is-done' : ''}`}>{report.status}</span>
-      </div>
-
-      <div className="ir-detail-meta">
-        <span className="ir-tag">{report.type}</span>
-        <span>{report.name}</span>
-        <span>{report.email}</span>
-        <span>{report.date}</span>
-      </div>
-
-      <p className="ir-message">{report.message}</p>
-
-      {report.replies.length > 0 && (
-        <div className="ir-replies">
-          <h3 className="ir-section-label">Replies</h3>
-          {report.replies.map((reply, index) => (
-            <div key={index} className="ir-reply">
-              <p className="ir-reply-meta">
-                {reply.by} · {reply.date}
-              </p>
-              <p className="ir-reply-text">{reply.text}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="ir-compose">
-        <h3 className="ir-section-label">{report.replies.length > 0 ? 'Send another reply' : 'Reply to driver'}</h3>
-        <textarea
-          className="ir-textarea"
-          rows={4}
-          value={draft}
-          placeholder={`Write a reply to ${report.name}...`}
-          onChange={(event) => setDraft(event.target.value)}
-        />
-        <button type="button" className="ir-send" disabled={!draft.trim()} onClick={handleSend}>
-          Send reply
-        </button>
-      </div>
-    </div>
-  )
-}
-
-export default function IncidentReports({ reports, types, onReply }) {
-  const [typeFilter, setTypeFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('All')
+export default function IncidentReports({ reports, onReply, onNote, onUpdateStatus, onArchive }) {
+  const [filterStatus, setFilterStatus] = useState('All')
+  const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState(null)
+  const [itemToDelete, setItemToDelete] = useState(null)
+  const [replyDraft, setReplyDraft] = useState('')
+  const [noteDraft, setNoteDraft] = useState('')
 
-  const filtered = reports.filter(
-    (item) =>
-      (typeFilter === 'All' || item.type === typeFilter) &&
-      (statusFilter === 'All' || item.status === statusFilter),
-  )
-
-  // If the selected report was filtered out, fall back to the first one in the list.
-  const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0]
-
-  const typeCount = (type) => reports.filter((item) => item.type === type).length
+  const visible = reports.filter(t => 
+    !t.isArchived &&
+    (filterStatus === 'All' || t.status === filterStatus) &&
+    (!query || (t.name + t.id + t.subject).toLowerCase().includes(query.toLowerCase()))
+  );
+  
+  const selected = reports.find(t => t.id === selectedId) || null;
 
   return (
     <>
-      <header className="dash-heading">
-        <h1 className="dash-title">Incident Reports</h1>
-        <p className="dash-subtitle">Problems drivers reported while using the device.</p>
-      </header>
-
-      <div className="ir-filters">
-        <div className="ir-chip-row" role="group" aria-label="Filter by type">
-          <button
-            type="button"
-            className={`ir-chip ${typeFilter === 'All' ? 'is-active' : ''}`}
-            onClick={() => setTypeFilter('All')}
-          >
-            All types <span className="ir-chip-count">{reports.length}</span>
-          </button>
-          {types.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className={`ir-chip ${typeFilter === type ? 'is-active' : ''}`}
-              onClick={() => setTypeFilter(type)}
-            >
-              {type} <span className="ir-chip-count">{typeCount(type)}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="ir-chip-row" role="group" aria-label="Filter by status">
-          {STATUS_FILTERS.map((status) => (
-            <button
-              key={status}
-              type="button"
-              className={`ir-chip ${statusFilter === status ? 'is-active' : ''}`}
-              onClick={() => setStatusFilter(status)}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
+      <h1>Incident Reports</h1>
+      <p className="sub">Reports drivers file with Report an Incident. Missed detections come first.</p>
+      
+      <div className="tools" style={{ display: 'flex', gap: '12px' }}>
+        <input 
+          style={{ width: '280px' }}
+          placeholder="Search by name, ID or text" 
+          value={query} 
+          onChange={e => setQuery(e.target.value)} 
+        />
+        <select style={{ width: '180px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <option>All</option>
+          {STATUS_OPTS.map(s => <option key={s}>{s}</option>)}
+        </select>
       </div>
 
-      <section className="ir-layout">
-        <div className="dash-card ir-list">
-          {filtered.length === 0 ? (
-            <p className="ir-empty">No reports match these filters.</p>
-          ) : (
-            <ul className="ir-items">
-              {filtered.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className={`ir-item ${selected && selected.id === item.id ? 'is-selected' : ''}`}
-                    onClick={() => setSelectedId(item.id)}
+      <div className="card scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Message</th>
+              <th>Incident type</th>
+              <th>From</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Sent</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.length === 0 ? (
+              <tr><td colSpan="8" className="mut">Nothing matches these filters.</td></tr>
+            ) : visible.map(r => (
+              <tr key={r.id} className="row" onClick={() => setSelectedId(r.id)}>
+                <td className="mut">{r.id}</td>
+                <td><b>{r.subject.slice(0, 56)}...</b></td>
+                <td>{r.subCategory}</td>
+                <td>{r.name}</td>
+                <td><Badge text={r.priority} /></td>
+                <td><Badge text={r.status} /></td>
+                <td className="mut sm">{r.date}</td>
+                <td>
+                  <button 
+                    className="btn ghost" 
+                    style={{ color: 'var(--bad)', padding: '6px 12px' }}
+                    onClick={(e) => { e.stopPropagation(); setItemToDelete(r.id); }}
                   >
-                    <span className="ir-item-text">
-                      <span className="ir-item-title">{item.subject}</span>
-                      <span className="ir-item-meta">
-                        {item.type} · {item.name} · {item.date}
-                      </span>
-                    </span>
-                    <span className={`dash-pill ${item.status === 'Answered' ? 'is-done' : ''}`}>{item.status}</span>
+                    Delete
                   </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        <div className="dash-card ir-detail-card">
-          {selected ? (
-            <ReportDetail key={selected.id} report={selected} onReply={onReply} />
-          ) : (
-            <p className="ir-empty">Select a report to see its details.</p>
-          )}
-        </div>
-      </section>
+      <ConfirmModal 
+        isOpen={!!itemToDelete} 
+        title="Delete Report" 
+        message="Are you sure you want to delete this report? It will be moved to the archive." 
+        confirmText="Delete"
+        onConfirm={() => { onArchive(itemToDelete, true); setItemToDelete(null); setSelectedId(null); }} 
+        onCancel={() => setItemToDelete(null)} 
+      />
+
+      <Drawer open={!!selected} onClose={() => setSelectedId(null)}>
+        {selected && (
+          <>
+            <h2>{selected.id} · {selected.name}</h2>
+            <div className="mut sm">Incident Reports · sent {selected.date} <Badge text={selected.status} /> <Badge text={selected.priority} /></div>
+            
+            <div className="lbl">Incident type</div>
+            <div className="fld">{selected.subCategory}</div>
+            
+            <div className="lbl">Description of event</div>
+            <div className="fld">{selected.message}</div>
+            
+            <div className="kv">
+              <span>Device</span>{selected.device || 'N/A'}
+              <span>Session</span>{selected.session || 'N/A'}
+            </div>
+            
+            <div className="tools" style={{ marginTop: '14px' }}>
+              <select aria-label="Status" value={selected.status} onChange={(e) => onUpdateStatus(selected.id, e.target.value)}>
+                {STATUS_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+              <select aria-label="Priority" value={selected.priority} onChange={(e) => onUpdateStatus(selected.id, e.target.value, 'priority')}>
+                {['High', 'Medium', 'Low'].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            
+            <div className="lbl">Responses (shown to driver)</div>
+            {selected.replies.length === 0 ? <div className="mut sm">No reply sent.</div> : selected.replies.map((x, i) => (
+              <div className="rep" key={i}><b>Reply ({x.d})</b>{x.t}</div>
+            ))}
+            
+            <textarea placeholder="Write a reply..." value={replyDraft} onChange={e => setReplyDraft(e.target.value)} />
+            <p><button className="btn" onClick={() => { onReply(selected.id, replyDraft); setReplyDraft(''); }}>Send reply</button></p>
+            
+            <div className="lbl">Internal notes</div>
+            {selected.notes.map((n, i) => <div className="note" key={i}>{n}</div>)}
+            <textarea placeholder="Add private note" style={{ minHeight: '56px' }} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} />
+            <p><button className="btn ghost" onClick={() => { onNote(selected.id, noteDraft); setNoteDraft(''); }}>Add note</button></p>
+          </>
+        )}
+      </Drawer>
     </>
   )
 }

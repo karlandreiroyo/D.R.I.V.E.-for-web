@@ -1,619 +1,258 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import ContactSupport from './contactsupport.jsx'
 import IncidentReports from './incidentreports.jsx'
 import FeatureSuggestions from './featuresuggestions.jsx'
 import UsersDevices from './usersdevices.jsx'
-import './dashboard.css'
+import HelpContent from './helpcontent.jsx'
+import AdminsRoles from './adminsroles.jsx'
+import Archive from './archive.jsx'
 
-const NAV = [
-  { id: 'dashboard', label: 'Dashboard' },
-  {
-    section: 'From the app',
-    items: [
-      { id: 'contact-support', label: 'Contact Support' },
-      { id: 'incident-reports', label: 'Incident Reports' },
-      { id: 'feature-suggestions', label: 'Feature Suggestions' },
-    ],
-  },
-  {
-    section: 'Manage',
-    items: [
-      { id: 'users-devices', label: 'Users & Devices' },
-      { id: 'help-content', label: 'Help Content' },
-      { id: 'admins', label: 'Admins' },
-    ],
-  },
-]
+// Shared UI Components derived from HTML logic
+export function Badge({ text, type }) {
+  const typeMap = {
+    'New': 'info',
+    'Unanswered': 'info',
+    'In review': 'warn',
+    'Under review': 'warn',
+    'In progress': 'warn',
+    'Answered': 'ok',
+    'Resolved': 'ok',
+    'Planned': 'ok',
+    'Closed': 'mut',
+    'Declined': 'mut',
+    'High': 'bad',
+    'Medium': 'warn',
+    'Low': 'mut',
+    'Connected': 'ok',
+    'Online': 'ok',
+    'Offline': 'mut',
+    'Suspended': 'bad',
+    'Active': 'ok'
+  };
+  const c = type || typeMap[text] || 'mut';
+  return <span className={`b ${c}`}>{text}</span>;
+}
 
-// Sample data. Replace with real data from your backend later.
-// status: 'New' (not answered yet) or 'Answered'
-// Incident Reports also have a `type` (one of INCIDENT_TYPES below).
-// Feature Suggestions also have a `stage` (one of FEATURE_STAGES below).
+export function Drawer({ open, onClose, children }) {
+  return (
+    <aside className={`drawer ${open ? 'open' : ''}`} aria-label="Submission details">
+      <button className="btn ghost" onClick={onClose} style={{ marginBottom: '12px' }}>Close</button>
+      {children}
+    </aside>
+  )
+}
+
+export function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, confirmText = "Confirm" }) {
+  if (!isOpen) return null;
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
+    }}>
+      <div className="card" style={{ width: '100%', maxWidth: '360px', margin: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+        <h3 style={{ marginTop: 0, fontSize: '18px' }}>{title}</h3>
+        <p className="sub" style={{ marginBottom: '24px' }}>{message}</p>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <button className="btn ghost" onClick={onCancel}>Cancel</button>
+          <button className="btn" style={{ backgroundColor: 'var(--bad)' }} onClick={onConfirm}>{confirmText}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Submissions mapping adapted from your original payload
 const INITIAL_SUBMISSIONS = [
   {
-    id: 1,
+    id: 'SUP-218',
     category: 'Contact Support',
+    subCategory: 'Connectivity',
     name: 'Ana Dizon',
     email: 'ana.dizon@email.com',
-    date: 'Oct 18, 2026 · 9:42 AM',
-    subject: 'My app says Hardware Not Connected every time I open it',
-    message:
-      'Hi! Since this morning my app keeps saying "Hardware Not Connected" even if the device is plugged in and the light is on. I already restarted my phone twice and it is still the same. Please help.',
+    date: 'Oct 16, 9:25 AM',
+    subject: 'My app says Hardware Not Connected every time',
+    message: 'Since this morning my app keeps saying "Hardware Not Connected" even if the device is plugged in and the light is on.',
     status: 'New',
+    priority: 'Medium',
+    device: 'DRV-0302 · v1.1.4',
     replies: [],
+    notes: [],
+    isArchived: false
   },
   {
-    id: 2,
-    category: 'Contact Support',
-    name: 'Grace Tan',
-    email: 'grace.tan@email.com',
-    date: 'Oct 18, 2026 · 8:15 AM',
-    subject: 'How long is my camera data kept? I want to be sure it is private',
-    message:
-      'Good morning. I would like to know how long the camera footage and face data are stored, and who can see them. I drive for a delivery company and I want to be sure my data stays private.',
-    status: 'New',
-    replies: [],
-  },
-  {
-    id: 3,
+    id: 'INC-1042',
     category: 'Incident Reports',
-    type: 'Missed Detection',
+    subCategory: 'Missed Detection',
     name: 'Maria Santos',
     email: 'maria.santos@email.com',
-    date: 'Oct 17, 2026 · 9:30 PM',
-    subject: 'On the highway I dozed off for about 3 seconds and nothing happened',
-    message: 'The alert did not trigger while I was dozing off on the highway.',
+    date: 'Oct 17, 8:42 AM',
+    subject: 'On the highway I dozed off for about 3 seconds',
+    message: 'The alert did not trigger while I was dozing off on the highway. The buzzer never sounded.',
     status: 'New',
+    priority: 'High',
+    device: 'DRV-0231 · v1.2.0',
+    session: '8h 14m',
     replies: [],
+    notes: [],
+    isArchived: false
   },
   {
-    id: 4,
+    id: 'FTR-31',
+    category: 'Feature Suggestions',
+    subCategory: 'Customization',
+    name: 'Jun Reyes',
+    email: 'jun.reyes@email.com',
+    date: 'Oct 16, 7:48 PM',
+    subject: 'Weekly drowsiness summary by email',
+    message: 'It would be great to get a weekly summary of my drowsiness alerts by email to plan my shifts.',
+    status: 'Under review',
+    sim: 9,
+    replies: [],
+    notes: [],
+    isArchived: false
+  },
+  {
+    id: 'INC-1040',
     category: 'Incident Reports',
-    type: 'Hardware Fault',
+    subCategory: 'Hardware Fault',
     name: 'Paolo Cruz',
     email: 'paolo.cruz@email.com',
-    date: 'Oct 17, 2026 · 6:05 PM',
-    subject: 'Buzzer works in Test Buzzer & Vibration but there is no sound while driving',
+    date: 'Oct 17, 6:05 PM',
+    subject: 'Buzzer works in Test but no sound while driving',
     message: 'The test works, but while driving I do not hear the buzzer.',
     status: 'New',
+    priority: 'High',
+    device: 'DRV-0094 · v1.1.4',
+    session: '1h 9m',
     replies: [],
-  },
-  {
-    id: 5,
-    category: 'Incident Reports',
-    type: 'Calibration / Lighting',
-    name: 'Ken Villar',
-    email: 'ken.villar@email.com',
-    date: 'Oct 17, 2026 · 2:20 PM',
-    subject: 'Calibration passes face detection but Lighting check keeps failing',
-    message: 'Face detection passes but the lighting check fails every time.',
-    status: 'New',
-    replies: [],
-  },
-  {
-    id: 6,
-    category: 'Feature Suggestions',
-    stage: 'Under review',
-    name: 'Jun Reyes',
-    email: 'jun.reyes@email.com',
-    date: 'Oct 16, 2026 · 7:48 PM',
-    subject: 'Weekly drowsiness summary by email',
-    message: 'It would be great to get a weekly summary of my drowsiness alerts by email.',
-    status: 'New',
-    replies: [],
-  },
-  {
-    id: 7,
-    category: 'Contact Support',
-    name: 'Liza Ramos',
-    email: 'liza.ramos@email.com',
-    date: 'Oct 15, 2026 · 11:10 AM',
-    subject: 'How do I pair a second driver to one device?',
-    message: 'We share one device between two drivers. How can I add the second driver so alerts are saved separately?',
-    status: 'Answered',
-    replies: [
-      {
-        by: 'Admin1',
-        date: 'Oct 15, 2026 · 1:25 PM',
-        text: 'Hi Liza! Open Settings > Drivers in the app and tap Add Driver. Each driver can then sign in and their alerts are saved separately. Let us know if you need anything else.',
-      },
-    ],
-  },
-  {
-    id: 8,
-    category: 'Contact Support',
-    name: 'Carlo Mendoza',
-    email: 'carlo.mendoza@email.com',
-    date: 'Oct 14, 2026 · 4:50 PM',
-    subject: 'I cannot change my phone number',
-    message: 'I got a new SIM and I cannot find where to change my phone number in the app.',
-    status: 'Answered',
-    replies: [
-      {
-        by: 'Admin1',
-        date: 'Oct 14, 2026 · 6:02 PM',
-        text: 'Hello Carlo! You can update it under Profile > Edit Details. If the option is missing, please update the app to the latest version.',
-      },
-    ],
-  },
-  {
-    id: 9,
-    category: 'Incident Reports',
-    type: 'False Alarm',
-    name: 'Sofia Lim',
-    email: 'sofia.lim@email.com',
-    date: 'Oct 13, 2026 · 3:12 PM',
-    subject: 'Alarm goes off when I look at my side mirror',
-    message: 'Every time I check my side mirror the buzzer sounds even though I am fully awake and alert.',
-    status: 'New',
-    replies: [],
-  },
-  {
-    id: 10,
-    category: 'Incident Reports',
-    type: 'App Bug',
-    name: 'Rico Bautista',
-    email: 'rico.bautista@email.com',
-    date: 'Oct 12, 2026 · 10:05 AM',
-    subject: 'App closes by itself when I open the Trip History screen',
-    message: 'Whenever I tap Trip History the app closes and goes back to my home screen.',
-    status: 'Answered',
-    replies: [
-      {
-        by: 'Admin1',
-        date: 'Oct 12, 2026 · 2:40 PM',
-        text: 'Thanks for reporting this, Rico. We found the cause and a fix is coming in the next update. Please update the app once it is available.',
-      },
-    ],
-  },
-  {
-    id: 11,
-    category: 'Feature Suggestions',
-    stage: 'Planned',
-    name: 'Diane Flores',
-    email: 'diane.flores@email.com',
-    date: 'Oct 11, 2026 · 8:30 PM',
-    subject: 'Dark mode for night driving',
-    message: 'The app screen is very bright at night. A dark mode would be easier on the eyes when I set up the device before a trip.',
-    status: 'Answered',
-    replies: [
-      {
-        by: 'Admin1',
-        date: 'Oct 12, 2026 · 9:15 AM',
-        text: 'Thanks Diane! Dark mode is on our list and planned for an upcoming update.',
-      },
-    ],
-  },
-  {
-    id: 12,
-    category: 'Feature Suggestions',
-    stage: 'Under review',
-    name: 'Mark Galang',
-    email: 'mark.galang@email.com',
-    date: 'Oct 10, 2026 · 5:22 PM',
-    subject: 'Voice alerts in Tagalog and Bisaya',
-    message: 'Can the alert also speak in Tagalog or Bisaya? Some of our drivers understand local languages better than English.',
-    status: 'New',
-    replies: [],
-  },
-  {
-    id: 13,
-    category: 'Feature Suggestions',
-    stage: 'In progress',
-    name: 'Nina Castillo',
-    email: 'nina.castillo@email.com',
-    date: 'Oct 9, 2026 · 1:05 PM',
-    subject: 'Show where each drowsiness alert happened on a map',
-    message: 'In Trip History it would help to see on a map where each alert happened, so I know which roads make me sleepy.',
-    status: 'Answered',
-    replies: [
-      {
-        by: 'Admin1',
-        date: 'Oct 9, 2026 · 4:00 PM',
-        text: 'Great idea, Nina! We have started working on a map view for Trip History.',
-      },
-    ],
-  },
-]
+    notes: [],
+    isArchived: false
+  }
+];
 
-const INCIDENT_TYPES = ['Missed Detection', 'False Alarm', 'Hardware Fault', 'App Bug', 'Calibration / Lighting']
-const FEATURE_STAGES = ['Under review', 'Planned', 'In progress', 'Done', 'Declined']
-
-// Sample users and their devices. Replace with real data from your backend later.
-// account: 'Active' or 'Suspended'
-// device: null (no device linked) or an object. connection: 'Online' or 'Offline'.
-// calibration: 'Calibrated' or 'Needs calibration'
 const INITIAL_USERS = [
-  {
-    id: 1,
-    name: 'Ana Dizon',
-    email: 'ana.dizon@email.com',
-    phone: '+63 917 123 4501',
-    role: 'Delivery driver',
-    vehicle: 'Motorcycle · ABC 1234',
-    joined: 'Aug 3, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0001',
-      firmware: 'v1.2.0',
-      connection: 'Offline',
-      lastSeen: 'Oct 18, 2026 · 9:10 AM',
-      calibration: 'Calibrated',
-      alerts30d: 12,
-    },
-  },
-  {
-    id: 2,
-    name: 'Grace Tan',
-    email: 'grace.tan@email.com',
-    phone: '+63 917 123 4502',
-    role: 'Delivery driver',
-    vehicle: 'Van · XYZ 5521',
-    joined: 'Aug 9, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0002',
-      firmware: 'v1.2.1',
-      connection: 'Online',
-      lastSeen: 'Oct 19, 2026 · 1:40 PM',
-      calibration: 'Calibrated',
-      alerts30d: 4,
-    },
-  },
-  {
-    id: 3,
-    name: 'Maria Santos',
-    email: 'maria.santos@email.com',
-    phone: '+63 917 123 4503',
-    role: 'Bus driver',
-    vehicle: 'Bus · NBC 8890',
-    joined: 'Aug 14, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0003',
-      firmware: 'v1.2.1',
-      connection: 'Online',
-      lastSeen: 'Oct 19, 2026 · 1:35 PM',
-      calibration: 'Calibrated',
-      alerts30d: 9,
-    },
-  },
-  {
-    id: 4,
-    name: 'Paolo Cruz',
-    email: 'paolo.cruz@email.com',
-    phone: '+63 917 123 4504',
-    role: 'Truck driver',
-    vehicle: 'Truck · TRK 3307',
-    joined: 'Aug 21, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0004',
-      firmware: 'v1.1.8',
-      connection: 'Online',
-      lastSeen: 'Oct 19, 2026 · 12:58 PM',
-      calibration: 'Calibrated',
-      alerts30d: 7,
-    },
-  },
-  {
-    id: 5,
-    name: 'Ken Villar',
-    email: 'ken.villar@email.com',
-    phone: '+63 917 123 4505',
-    role: 'Taxi driver',
-    vehicle: 'Sedan · TAX 4410',
-    joined: 'Sep 2, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0005',
-      firmware: 'v1.2.0',
-      connection: 'Online',
-      lastSeen: 'Oct 19, 2026 · 11:20 AM',
-      calibration: 'Needs calibration',
-      alerts30d: 2,
-    },
-  },
-  {
-    id: 6,
-    name: 'Jun Reyes',
-    email: 'jun.reyes@email.com',
-    phone: '+63 917 123 4506',
-    role: 'Delivery driver',
-    vehicle: 'Motorcycle · MTR 7712',
-    joined: 'Sep 5, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0006',
-      firmware: 'v1.2.1',
-      connection: 'Online',
-      lastSeen: 'Oct 19, 2026 · 1:12 PM',
-      calibration: 'Calibrated',
-      alerts30d: 5,
-    },
-  },
-  {
-    id: 7,
-    name: 'Carlo Mendoza',
-    email: 'carlo.mendoza@email.com',
-    phone: '+63 917 123 4507',
-    role: 'Jeepney driver',
-    vehicle: 'Jeepney · JPN 2203',
-    joined: 'Sep 11, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0007',
-      firmware: 'v1.1.8',
-      connection: 'Offline',
-      lastSeen: 'Oct 14, 2026 · 4:45 PM',
-      calibration: 'Calibrated',
-      alerts30d: 0,
-    },
-  },
-  {
-    id: 8,
-    name: 'Sofia Lim',
-    email: 'sofia.lim@email.com',
-    phone: '+63 917 123 4508',
-    role: 'Delivery driver',
-    vehicle: 'Van · SLM 6045',
-    joined: 'Sep 18, 2026',
-    account: 'Active',
-    device: {
-      serial: 'DRV-0008',
-      firmware: 'v1.2.1',
-      connection: 'Online',
-      lastSeen: 'Oct 19, 2026 · 1:30 PM',
-      calibration: 'Calibrated',
-      alerts30d: 3,
-    },
-  },
-  {
-    id: 9,
-    name: 'Rico Bautista',
-    email: 'rico.bautista@email.com',
-    phone: '+63 917 123 4509',
-    role: 'Truck driver',
-    vehicle: 'Truck · RBT 9981',
-    joined: 'Oct 1, 2026',
-    account: 'Active',
-    device: null,
-  },
-  {
-    id: 10,
-    name: 'Diane Flores',
-    email: 'diane.flores@email.com',
-    phone: '+63 917 123 4510',
-    role: 'Taxi driver',
-    vehicle: 'Sedan · DNF 1188',
-    joined: 'Oct 3, 2026',
-    account: 'Suspended',
-    device: {
-      serial: 'DRV-0010',
-      firmware: 'v1.2.0',
-      connection: 'Offline',
-      lastSeen: 'Oct 10, 2026 · 8:05 PM',
-      calibration: 'Calibrated',
-      alerts30d: 1,
-    },
-  },
-]
+  { id: 1, name: 'Ana Dizon', email: 'ana.dizon@email.com', phone: '+63 917 123 4501', role: 'Delivery driver', vehicle: 'Motorcycle · ABC 1234', joined: 'Aug 3, 2026', account: 'Active', device: { serial: 'DRV-0302', firmware: 'v1.1.4', connection: 'Offline', alerts30d: 12 } },
+  { id: 2, name: 'Maria Santos', email: 'maria.santos@email.com', phone: '+63 917 123 4503', role: 'Bus driver', vehicle: 'Bus · NBC 8890', joined: 'Aug 14, 2026', account: 'Active', device: { serial: 'DRV-0231', firmware: 'v1.2.0', connection: 'Online', alerts30d: 9 } },
+  { id: 3, name: 'Paolo Cruz', email: 'paolo.cruz@email.com', phone: '+63 917 123 4504', role: 'Truck driver', vehicle: 'Truck · TRK 3307', joined: 'Aug 21, 2026', account: 'Active', device: { serial: 'DRV-0094', firmware: 'v1.1.4', connection: 'Online', alerts30d: 7 } },
+];
 
 function countNew(list, category) {
-  return list.filter((s) => s.category === category && s.status === 'New').length
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 32 32" fill="none" className="dash-user-icon" aria-hidden="true">
-      <circle cx="16" cy="16" r="14.5" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="16" cy="12.5" r="4.6" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M7 25.2c1.6-4.3 5-6.2 9-6.2s7.4 1.9 9 6.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function ChevronIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="dash-chevron" aria-hidden="true">
-      <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function TopBar({ onLogout }) {
-  const [open, setOpen] = useState(false)
-  const menuRef = useRef(null)
-
-  useEffect(() => {
-    function handleClick(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  return (
-    <header className="dash-topbar">
-      <div className="dash-brand">
-        <span className="dash-logo-shell">
-          <img src="/project-logo.png" alt="" className="dash-logo" />
-        </span>
-        <span className="dash-brand-name">D.R.I.V.E.</span>
-      </div>
-
-      <div className="dash-account" ref={menuRef}>
-        <button
-          type="button"
-          className="dash-account-button"
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
-        >
-          <UserIcon />
-          <span className="dash-account-name">Admin1</span>
-          <ChevronIcon />
-        </button>
-        {open && (
-          <div className="dash-menu" role="menu">
-            <button type="button" role="menuitem" className="dash-menu-item" onClick={onLogout}>
-              Log out
-            </button>
-          </div>
-        )}
-      </div>
-    </header>
-  )
-}
-
-function NavButton({ item, active, badge, onSelect }) {
-  const isActive = active === item.id
-  return (
-    <button
-      type="button"
-      className={`dash-nav-item ${isActive ? 'is-active' : ''}`}
-      aria-current={isActive ? 'page' : undefined}
-      onClick={() => onSelect(item.id)}
-    >
-      <span>{item.label}</span>
-      {badge > 0 && <span className="dash-nav-badge">{badge}</span>}
-    </button>
-  )
-}
-
-function Sidebar({ active, onSelect, badges }) {
-  return (
-    <nav className="dash-sidebar" aria-label="Main">
-      {NAV.map((entry) =>
-        entry.section ? (
-          <div key={entry.section} className="dash-nav-group">
-            <p className="dash-nav-label">{entry.section}</p>
-            {entry.items.map((item) => (
-              <NavButton key={item.id} item={item} active={active} badge={badges[item.id]} onSelect={onSelect} />
-            ))}
-          </div>
-        ) : (
-          <NavButton key={entry.id} item={entry} active={active} onSelect={onSelect} />
-        ),
-      )}
-    </nav>
-  )
+  return list.filter((s) => s.category === category && s.status === 'New' && !s.isArchived).length
 }
 
 function Overview({ submissions, onNavigate }) {
-  // Count incident reports per type from the real data.
-  const incidentCounts = INCIDENT_TYPES.map((label) => ({
-    label,
-    count: submissions.filter((s) => s.category === 'Incident Reports' && s.type === label).length,
-  }))
-  const barMax = Math.max(2, ...incidentCounts.map((t) => t.count))
-
-  const stats = [
-    { value: countNew(submissions, 'Contact Support'), label: 'Contact Support: unanswered', page: 'contact-support' },
-    { value: countNew(submissions, 'Incident Reports'), label: 'Incident Reports: new', page: 'incident-reports' },
-    { value: countNew(submissions, 'Feature Suggestions'), label: 'Feature Suggestions: new', page: 'feature-suggestions' },
-  ]
-
-  const latest = submissions.slice(0, 6)
+  const incidentCats = {};
+  submissions
+    .filter(r => r.category === 'Incident Reports' && !r.isArchived)
+    .forEach(r => { incidentCats[r.subCategory] = (incidentCats[r.subCategory] || 0) + 1 });
+  
+  const barMax = Math.max(2, ...Object.values(incidentCats));
+  const latest = submissions.filter(s => !s.isArchived).slice(0, 6);
 
   return (
     <>
-      <header className="dash-heading">
-        <h1 className="dash-title">Dashboard</h1>
-        <p className="dash-subtitle">What drivers sent in and what still needs an answer.</p>
-      </header>
-
-      <section className="dash-stats" aria-label="Summary">
-        {stats.map((stat) => (
-          <button key={stat.label} type="button" className="dash-card dash-stat" onClick={() => onNavigate(stat.page)}>
-            <span className="dash-stat-value">{stat.value}</span>
-            <span className="dash-stat-label">{stat.label}</span>
-          </button>
-        ))}
-      </section>
-
-      <section className="dash-panels">
-        <div className="dash-card dash-panel">
-          <h2 className="dash-panel-title">Incident reports by type</h2>
-          <ul className="dash-type-list">
-            {incidentCounts.map((type) => (
-              <li key={type.label} className="dash-type-row">
-                <span className="dash-type-label">{type.label}</span>
-                <span className="dash-bar-track">
-                  <span className="dash-bar-fill" style={{ width: `${(type.count / barMax) * 100}%` }} />
-                </span>
-                <span className="dash-type-count">{type.count}</span>
-              </li>
-            ))}
-          </ul>
+      <h1>Dashboard</h1>
+      <p className="sub">What drivers sent in and what still needs an answer.</p>
+      
+      <div className="grid g3">
+        <div className="card stat" onClick={() => onNavigate('contact-support')}>
+          <b>{countNew(submissions, 'Contact Support')}</b>
+          <span>Contact Support: new</span>
         </div>
-
-        <div className="dash-card dash-panel">
-          <h2 className="dash-panel-title">Latest submissions</h2>
-          <ul className="dash-submissions">
-            {latest.map((item) => (
-              <li key={item.id} className="dash-submission">
-                <div className="dash-submission-text">
-                  <p className="dash-submission-title">{item.subject}</p>
-                  <p className="dash-submission-meta">
-                    {item.category} · {item.name}
-                  </p>
-                </div>
-                <span className={`dash-pill ${item.status === 'Answered' ? 'is-done' : ''}`}>{item.status}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="card stat" onClick={() => onNavigate('incident-reports')}>
+          <b>{countNew(submissions, 'Incident Reports')}</b>
+          <span>Incident Reports: new</span>
         </div>
-      </section>
+        <div className="card stat" onClick={() => onNavigate('feature-suggestions')}>
+          <b>{countNew(submissions, 'Feature Suggestions')}</b>
+          <span>Feature Suggestions: new</span>
+        </div>
+      </div>
+
+      <div className="grid g2" style={{ marginTop: '14px' }}>
+        <div className="card">
+          <h3>Incident reports by type</h3>
+          {Object.entries(incidentCats).map(([k, v]) => (
+            <div className="bar" key={k}>
+              <span>{k}</span>
+              <div><i style={{ width: `${(v / barMax) * 100}%` }}></i></div>
+              <b>{v}</b>
+            </div>
+          ))}
+        </div>
+        
+        <div className="card">
+          <h3>Latest submissions</h3>
+          {latest.map(item => (
+            <div className="item" key={item.id} onClick={() => onNavigate(item.category.toLowerCase().replace(' ', '-'))}>
+              <div>
+                {item.subject.slice(0, 48) + (item.subject.length > 48 ? '...' : '')}
+                <div className="mut sm">{item.category} · {item.name}</div>
+              </div>
+              <Badge text={item.status} />
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   )
 }
 
-function Placeholder({ title }) {
-  return (
-    <header className="dash-heading">
-      <h1 className="dash-title">{title}</h1>
-      <p className="dash-subtitle">This page is coming soon.</p>
-    </header>
-  )
-}
+export default function Dashboard({ user, onLogout }) {
+  const [page, setPage] = useState('dashboard');
+  const [submissions, setSubmissions] = useState(INITIAL_SUBMISSIONS);
+  const [users, setUsers] = useState(INITIAL_USERS);
+  const [toastMsg, setToastMsg] = useState('');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-export default function Dashboard({ onLogout }) {
-  const [page, setPage] = useState('dashboard')
-  const [submissions, setSubmissions] = useState(INITIAL_SUBMISSIONS)
-  const [users, setUsers] = useState(INITIAL_USERS)
+  // Required to override the login body styles dynamically
+  useEffect(() => {
+    document.body.classList.add('dashboard-active');
+    return () => document.body.classList.remove('dashboard-active');
+  }, []);
+
+  function toggleTheme() {
+    const r = document.documentElement;
+    const isDark = matchMedia("(prefers-color-scheme: dark)").matches;
+    const c = r.dataset.theme || (isDark ? "dark" : "light");
+    r.dataset.theme = c === "dark" ? "light" : "dark";
+  }
+
+  function triggerToast(msg) {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 1800);
+  }
 
   function handleReply(id, text) {
-    const date = new Date().toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    })
     setSubmissions((list) =>
       list.map((item) =>
         item.id === id
-          ? { ...item, status: 'Answered', replies: [...item.replies, { by: 'Admin1', date, text }] }
-          : item,
-      ),
-    )
+          ? { ...item, status: 'Answered', replies: [...item.replies, { t: text, d: 'Just now' }] }
+          : item
+      )
+    );
+    triggerToast('Reply sent');
   }
 
-  function handleStageChange(id, stage) {
-    setSubmissions((list) => list.map((item) => (item.id === id ? { ...item, stage } : item)))
+  function handleNote(id, text) {
+    setSubmissions((list) =>
+      list.map((item) => item.id === id ? { ...item, notes: [...item.notes, text] } : item)
+    );
+    triggerToast('Note added');
   }
 
-  function handleToggleSuspend(id) {
-    setUsers((list) =>
-      list.map((user) =>
-        user.id === id ? { ...user, account: user.account === 'Suspended' ? 'Active' : 'Suspended' } : user,
-      ),
-    )
+  function handleUpdateStatus(id, newStatus, field = 'status') {
+    setSubmissions((list) =>
+      list.map((item) => item.id === id ? { ...item, [field]: newStatus } : item)
+    );
+    triggerToast(`Updated to ${newStatus}`);
   }
 
-  function handleUnlinkDevice(id) {
-    setUsers((list) => list.map((user) => (user.id === id ? { ...user, device: null } : user)))
+  function handleToggleArchive(id, isArchived) {
+    setSubmissions((list) =>
+      list.map((item) => item.id === id ? { ...item, isArchived } : item)
+    );
+    triggerToast(isArchived ? 'Moved to archive' : 'Restored from archive');
   }
 
   const badges = {
@@ -622,48 +261,82 @@ export default function Dashboard({ onLogout }) {
     'feature-suggestions': countNew(submissions, 'Feature Suggestions'),
   }
 
-  const pageTitle = NAV.flatMap((entry) => (entry.section ? entry.items : [entry])).find((item) => item.id === page)?.label
+  function NavItem({ id, label, badge }) {
+    return (
+      <button className={page === id ? "on" : ""} onClick={() => setPage(id)}>
+        {label}
+        {badge > 0 && <span className="n">{badge}</span>}
+      </button>
+    )
+  }
 
-  let content
+  let content;
   if (page === 'dashboard') {
-    content = <Overview submissions={submissions} onNavigate={setPage} />
+    content = <Overview submissions={submissions} onNavigate={setPage} />;
   } else if (page === 'contact-support') {
-    content = (
-      <ContactSupport
-        tickets={submissions.filter((item) => item.category === 'Contact Support')}
-        onReply={handleReply}
-      />
-    )
+    content = <ContactSupport tickets={submissions.filter(s => s.category === 'Contact Support')} onReply={handleReply} onNote={handleNote} onUpdateStatus={handleUpdateStatus} onArchive={handleToggleArchive} />;
   } else if (page === 'incident-reports') {
-    content = (
-      <IncidentReports
-        reports={submissions.filter((item) => item.category === 'Incident Reports')}
-        types={INCIDENT_TYPES}
-        onReply={handleReply}
-      />
-    )
+    content = <IncidentReports reports={submissions.filter(s => s.category === 'Incident Reports')} onReply={handleReply} onNote={handleNote} onUpdateStatus={handleUpdateStatus} onArchive={handleToggleArchive} />;
   } else if (page === 'feature-suggestions') {
-    content = (
-      <FeatureSuggestions
-        suggestions={submissions.filter((item) => item.category === 'Feature Suggestions')}
-        stages={FEATURE_STAGES}
-        onReply={handleReply}
-        onStageChange={handleStageChange}
-      />
-    )
+    content = <FeatureSuggestions suggestions={submissions.filter(s => s.category === 'Feature Suggestions')} onReply={handleReply} onNote={handleNote} onUpdateStatus={handleUpdateStatus} onArchive={handleToggleArchive} />;
   } else if (page === 'users-devices') {
-    content = <UsersDevices users={users} onToggleSuspend={handleToggleSuspend} onUnlinkDevice={handleUnlinkDevice} />
+    content = <UsersDevices users={users} triggerToast={triggerToast} />;
+  } else if (page === 'help') {
+    content = <HelpContent triggerToast={triggerToast} />;
+  } else if (page === 'admins') {
+    content = <AdminsRoles triggerToast={triggerToast} />;
+  } else if (page === 'archive') {
+    content = <Archive submissions={submissions.filter(s => s.isArchived)} onRestore={handleToggleArchive} />;
   } else {
-    content = <Placeholder title={pageTitle} />
+    content = <div><header><h1>Coming Soon</h1></header></div>;
   }
 
   return (
-    <div className="dash-page">
-      <TopBar onLogout={onLogout} />
-      <div className="dash-body">
-        <Sidebar active={page} onSelect={setPage} badges={badges} />
-        <main className="dash-main">{content}</main>
+    <div className="app">
+      <nav aria-label="Main" className="nav-sidebar">
+        <div className="logo">
+          <img 
+            src="/project-logo.png" 
+            alt="D.R.I.V.E. Logo" 
+            style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} 
+          />
+          <div>D.R.I.V.E.<small>Admin console</small></div>
+        </div>
+        
+        <NavItem id="dashboard" label="Dashboard" />
+        
+        <div className="sec">From the app</div>
+        <NavItem id="contact-support" label="Contact Support" badge={badges['contact-support']} />
+        <NavItem id="incident-reports" label="Incident Reports" badge={badges['incident-reports']} />
+        <NavItem id="feature-suggestions" label="Feature Suggestions" badge={badges['feature-suggestions']} />
+        
+        <div className="sec">Manage</div>
+        <NavItem id="users-devices" label="Users & devices" />
+        <NavItem id="help" label="Help content" />
+        <NavItem id="admins" label="Admins" />
+        <NavItem id="archive" label="Archive" />
+        
+        <div className="sp"></div>
+        <button onClick={toggleTheme}>Toggle theme</button>
+        <button onClick={() => setShowLogoutModal(true)}>Log out</button>
+      </nav>
+
+      <main className="main-content">
+        {content}
+      </main>
+
+      <div className={`toast ${toastMsg ? 'on' : ''}`} role="status">
+        {toastMsg}
       </div>
+
+      <ConfirmModal 
+        isOpen={showLogoutModal} 
+        title="Log out" 
+        message="Are you sure you want to log out?" 
+        confirmText="Log out"
+        onConfirm={onLogout} 
+        onCancel={() => setShowLogoutModal(false)} 
+      />
     </div>
   )
 }

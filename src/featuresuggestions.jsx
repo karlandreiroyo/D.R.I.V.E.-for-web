@@ -1,189 +1,129 @@
 import { useState } from 'react'
-// Shares the list/detail layout styles with the Incident Reports page,
-// plus a few extras (stage tag and dropdown) in featuresuggestions.css.
-import './incidentreport.css'
-import './featuresuggestions.css'
+import { Badge, Drawer, ConfirmModal } from './dashboard.jsx'
 
-const STATUS_FILTERS = ['All', 'New', 'Answered']
+const STATUS_OPTS = ["New", "Under review", "Planned", "In progress", "Declined"];
 
-function stageClass(stage) {
-  return `fs-stage fs-stage--${stage.toLowerCase().replace(/\s+/g, '-')}`
-}
-
-function SuggestionDetail({ item, stages, onReply, onStageChange }) {
-  const [draft, setDraft] = useState('')
-
-  function handleSend() {
-    const text = draft.trim()
-    if (!text) return
-    onReply(item.id, text)
-    setDraft('')
-  }
-
-  return (
-    <div className="ir-detail">
-      <div className="ir-detail-head">
-        <h2 className="ir-detail-title">{item.subject}</h2>
-        <span className={`dash-pill ${item.status === 'Answered' ? 'is-done' : ''}`}>{item.status}</span>
-      </div>
-
-      <div className="ir-detail-meta">
-        <span className={stageClass(item.stage)}>{item.stage}</span>
-        <span>{item.name}</span>
-        <span>{item.email}</span>
-        <span>{item.date}</span>
-      </div>
-
-      <div className="fs-stage-row">
-        <label className="ir-section-label" htmlFor={`stage-${item.id}`}>
-          Stage
-        </label>
-        <select
-          id={`stage-${item.id}`}
-          className="fs-select"
-          value={item.stage}
-          onChange={(event) => onStageChange(item.id, event.target.value)}
-        >
-          {stages.map((stage) => (
-            <option key={stage} value={stage}>
-              {stage}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <p className="ir-message">{item.message}</p>
-
-      {item.replies.length > 0 && (
-        <div className="ir-replies">
-          <h3 className="ir-section-label">Replies</h3>
-          {item.replies.map((reply, index) => (
-            <div key={index} className="ir-reply">
-              <p className="ir-reply-meta">
-                {reply.by} · {reply.date}
-              </p>
-              <p className="ir-reply-text">{reply.text}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="ir-compose">
-        <h3 className="ir-section-label">{item.replies.length > 0 ? 'Send another reply' : 'Reply to driver'}</h3>
-        <textarea
-          className="ir-textarea"
-          rows={4}
-          value={draft}
-          placeholder={`Write a reply to ${item.name}...`}
-          onChange={(event) => setDraft(event.target.value)}
-        />
-        <button type="button" className="ir-send" disabled={!draft.trim()} onClick={handleSend}>
-          Send reply
-        </button>
-      </div>
-    </div>
-  )
-}
-
-export default function FeatureSuggestions({ suggestions, stages, onReply, onStageChange }) {
-  const [stageFilter, setStageFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('All')
+export default function FeatureSuggestions({ suggestions, onReply, onNote, onUpdateStatus, onArchive }) {
+  const [filterStatus, setFilterStatus] = useState('All')
+  const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState(null)
+  const [itemToDelete, setItemToDelete] = useState(null)
+  const [replyDraft, setReplyDraft] = useState('')
+  const [noteDraft, setNoteDraft] = useState('')
 
-  const filtered = suggestions.filter(
-    (item) =>
-      (stageFilter === 'All' || item.stage === stageFilter) &&
-      (statusFilter === 'All' || item.status === statusFilter),
-  )
-
-  // If the selected suggestion was filtered out, fall back to the first one in the list.
-  const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0]
-
-  const stageCount = (stage) => suggestions.filter((item) => item.stage === stage).length
+  const visible = suggestions.filter(t => 
+    !t.isArchived &&
+    (filterStatus === 'All' || t.status === filterStatus) &&
+    (!query || (t.name + t.id + t.subject).toLowerCase().includes(query.toLowerCase()))
+  );
+  
+  const selected = suggestions.find(t => t.id === selectedId) || null;
 
   return (
     <>
-      <header className="dash-heading">
-        <h1 className="dash-title">Feature Suggestions</h1>
-        <p className="dash-subtitle">Ideas drivers sent in. Reply to them and track what you plan to build.</p>
-      </header>
-
-      <div className="ir-filters">
-        <div className="ir-chip-row" role="group" aria-label="Filter by stage">
-          <button
-            type="button"
-            className={`ir-chip ${stageFilter === 'All' ? 'is-active' : ''}`}
-            onClick={() => setStageFilter('All')}
-          >
-            All stages <span className="ir-chip-count">{suggestions.length}</span>
-          </button>
-          {stages.map((stage) => (
-            <button
-              key={stage}
-              type="button"
-              className={`ir-chip ${stageFilter === stage ? 'is-active' : ''}`}
-              onClick={() => setStageFilter(stage)}
-            >
-              {stage} <span className="ir-chip-count">{stageCount(stage)}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="ir-chip-row" role="group" aria-label="Filter by status">
-          {STATUS_FILTERS.map((status) => (
-            <button
-              key={status}
-              type="button"
-              className={`ir-chip ${statusFilter === status ? 'is-active' : ''}`}
-              onClick={() => setStatusFilter(status)}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
+      <h1>Feature Suggestions</h1>
+      <p className="sub">Ideas drivers send with Suggest a Feature.</p>
+      
+      <div className="tools" style={{ display: 'flex', gap: '12px' }}>
+        <input 
+          style={{ width: '280px' }}
+          placeholder="Search by name, ID or text" 
+          value={query} 
+          onChange={e => setQuery(e.target.value)} 
+        />
+        <select style={{ width: '180px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <option>All</option>
+          {STATUS_OPTS.map(s => <option key={s}>{s}</option>)}
+        </select>
       </div>
 
-      <section className="ir-layout">
-        <div className="dash-card ir-list">
-          {filtered.length === 0 ? (
-            <p className="ir-empty">No suggestions match these filters.</p>
-          ) : (
-            <ul className="ir-items">
-              {filtered.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className={`ir-item ${selected && selected.id === item.id ? 'is-selected' : ''}`}
-                    onClick={() => setSelectedId(item.id)}
+      <div className="card scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Suggestion</th>
+              <th>Theme</th>
+              <th>From</th>
+              <th>Status</th>
+              <th>Sent</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.length === 0 ? (
+              <tr><td colSpan="7" className="mut">Nothing matches these filters.</td></tr>
+            ) : visible.map(r => (
+              <tr key={r.id} className="row" onClick={() => setSelectedId(r.id)}>
+                <td className="mut">{r.id}</td>
+                <td><b>{r.subject.slice(0, 56)}...</b></td>
+                <td>{r.subCategory}</td>
+                <td>{r.name}</td>
+                <td><Badge text={r.status} /></td>
+                <td className="mut sm">{r.date}</td>
+                <td>
+                  <button 
+                    className="btn ghost" 
+                    style={{ color: 'var(--bad)', padding: '6px 12px' }}
+                    onClick={(e) => { e.stopPropagation(); setItemToDelete(r.id); }}
                   >
-                    <span className="ir-item-text">
-                      <span className="ir-item-title">{item.subject}</span>
-                      <span className="ir-item-meta">
-                        {item.stage} · {item.name} · {item.date}
-                      </span>
-                    </span>
-                    <span className={`dash-pill ${item.status === 'Answered' ? 'is-done' : ''}`}>{item.status}</span>
+                    Delete
                   </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        <div className="dash-card ir-detail-card">
-          {selected ? (
-            <SuggestionDetail
-              key={selected.id}
-              item={selected}
-              stages={stages}
-              onReply={onReply}
-              onStageChange={onStageChange}
-            />
-          ) : (
-            <p className="ir-empty">Select a suggestion to see its details.</p>
-          )}
-        </div>
-      </section>
+      <ConfirmModal 
+        isOpen={!!itemToDelete} 
+        title="Delete Suggestion" 
+        message="Are you sure you want to delete this suggestion? It will be moved to the archive." 
+        confirmText="Delete"
+        onConfirm={() => { onArchive(itemToDelete, true); setItemToDelete(null); setSelectedId(null); }} 
+        onCancel={() => setItemToDelete(null)} 
+      />
+
+      <Drawer open={!!selected} onClose={() => setSelectedId(null)}>
+        {selected && (
+          <>
+            <h2>{selected.id} · {selected.name}</h2>
+            <div className="mut sm">Feature Suggestions · sent {selected.date} <Badge text={selected.status} /></div>
+            
+            <div className="lbl">Suggest feature</div>
+            <div className="fld">{selected.subject}</div>
+            
+            <div className="lbl">How would this help you?</div>
+            <div className="fld">{selected.message}</div>
+            
+            {selected.sim && (
+              <div className="kv">
+                <span>Similar ideas</span>{selected.sim} other drivers asked for this
+              </div>
+            )}
+            
+            <div className="tools" style={{ marginTop: '14px' }}>
+              <select aria-label="Status" value={selected.status} onChange={(e) => onUpdateStatus(selected.id, e.target.value)}>
+                {STATUS_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            
+            <div className="lbl">Responses</div>
+            {selected.replies.length === 0 ? <div className="mut sm">No reply sent.</div> : selected.replies.map((x, i) => (
+              <div className="rep" key={i}><b>Reply ({x.d})</b>{x.t}</div>
+            ))}
+            
+            <textarea placeholder="Write a reply..." value={replyDraft} onChange={e => setReplyDraft(e.target.value)} />
+            <p><button className="btn" onClick={() => { onReply(selected.id, replyDraft); setReplyDraft(''); }}>Send reply</button></p>
+            
+            <div className="lbl">Internal notes</div>
+            {selected.notes.map((n, i) => <div className="note" key={i}>{n}</div>)}
+            <textarea placeholder="Add note" style={{ minHeight: '56px' }} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} />
+            <p><button className="btn ghost" onClick={() => { onNote(selected.id, noteDraft); setNoteDraft(''); }}>Add note</button></p>
+          </>
+        )}
+      </Drawer>
     </>
   )
 }
